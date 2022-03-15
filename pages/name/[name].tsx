@@ -5,8 +5,9 @@ import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 
 import confetti from 'canvas-confetti'
 
+import { pokeApi } from "../../api";
 import { Layout } from "../../components/layouts"
-import { Pokemon } from "../../interfaces";
+import { Pokemon, PokemonListStruct } from "../../interfaces";
 import { getPokemonInfo, localFavorites } from "../../utils";
 
 
@@ -15,9 +16,9 @@ interface Props {
 }
 
 
-const PokemonPage: NextPage<Props> = ({ pokemon }) => {
+const PokemonByNamePage: NextPage<Props> = ({ pokemon }) => {
 
-    const [inFavorites, setInFavorites] = useState<Boolean>(false)
+    const [inFavorites, setInFavorites] = useState(false)
 
     const onToggleFavorites = () => {
         localFavorites.toggleFavorites(pokemon.id)
@@ -42,7 +43,6 @@ const PokemonPage: NextPage<Props> = ({ pokemon }) => {
         setInFavorites(favorites.includes( pokemon.id ))
     }, [])
     
-
     return (
         <Layout title={ pokemon.name }>
             <Grid.Container css={{ marginTop: '5px' }}>
@@ -69,7 +69,7 @@ const PokemonPage: NextPage<Props> = ({ pokemon }) => {
                                 ghost={ !inFavorites }
                                 onClick={onToggleFavorites}
                             >
-                                { inFavorites ? 'Quitar de favoritos':  'Guardar en favoritos' }                            </Button>
+                                { inFavorites ? 'Quitar de favoritos': 'Guardar en favoritos' }                            </Button>
                         </Card.Header>
 
                         <Card.Body>
@@ -113,27 +113,30 @@ const PokemonPage: NextPage<Props> = ({ pokemon }) => {
 // You should use getStaticPaths if you’re statically pre-rendering pages that use dynamic routes
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
 
-    const pokemons151 = [...Array(151)].map( (value, index) => `${ index + 1 }`)
+    const { data } = await pokeApi.get<PokemonListStruct>(`/pokemon?limit=151`)
+    // const pokemons151: SmallResult[] = data.results
+    const pokemonNames: string[] = data.results.map( pokemon => pokemon.name )
 
     return {
-        paths: pokemons151.map( id => ({
-            params: { id }
+        paths: pokemonNames.map( name => ({
+            params: { name }
         })),
         fallback: false
     }
 }
 
+
 // export const getStaticProps: GetStaticProps = async (ctx) => {
 export const getStaticProps: GetStaticProps = async ({ params }) => {
 
-    const { id } = params as { id: string }
+    const { name } = params as { name: string }
 
     return {
         props: {
-            pokemon: await getPokemonInfo(id)
+            pokemon: await getPokemonInfo(name)
         }
     }
   }
 
 
-export default PokemonPage
+export default PokemonByNamePage

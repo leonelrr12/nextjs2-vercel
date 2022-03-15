@@ -39,9 +39,10 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
   const imgUrl = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/'
   const { data } = await pokeApi.get<PokemonListStruct>('/pokemon/?limit=151')
   const pokemons: SmallResult[] = data.results.map( p => ({
-      ...p,
       id: p.url.split('/')[6],
-      img: imgUrl+p.url.split('/')[6]+'.svg'
+      name: p.name,
+      img: imgUrl+p.url.split('/')[6]+'.svg',
+      url: p.url
     })
   )
 
